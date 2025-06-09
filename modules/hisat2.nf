@@ -19,7 +19,7 @@ process hisat2index {
 /************************************************************************
 * HISAT2
 ************************************************************************/
-/process hisat2 {
+process hisat2 {
     label 'hisat2'
     tag "$meta.sample"
 
@@ -70,49 +70,7 @@ process hisat2index {
             """
         }
     } 
-}/
-
-
-/************************************************************************
-* HISAT2
-************************************************************************/
-process hisat2 {
-    tag "$meta.sample"
-    label 'hisat2'
-
-    publishDir "${params.output}/${params.hisat2_dir}", mode: 'copy', pattern: "*.sorted.bam"
-
-    input:
-    tuple val(meta), path(reads)             // reads_ch: metadata, paired-end reads as [R1, R2]
-    path reference_index_files               // reference_index_ch: all .ht2 files as a list
-    val additionalParams                     // optional extra HISAT2 params
-
-    output:
-    tuple val(meta), path("${meta.sample}.sorted.bam"), emit: sample_bam 
-    path "${meta.sample}_summary.log", emit: log
-
-    script:
-    def index_prefix = reference_index_files[0].baseName
-    def cpus = task.cpus
-
-    if ( !meta.paired_end ) {
-        """
-        mkdir tmp-hisat2-${meta.sample}
-        hisat2 -x ${index_prefix} -U ${reads[0]} -p ${cpus} --new-summary --summary-file ${meta.sample}_summary.log --temp-directory tmp-hisat2-${meta.sample} ${additionalParams} -S ${meta.sample}.sam
-        samtools view -bS ${meta.sample}.sam | samtools sort -o ${meta.sample}.sorted.bam -T tmp --threads ${cpus}
-        rm -r tmp-hisat2-${meta.sample} ${meta.sample}.sam
-        """
-    }
-    else {
-        """
-        mkdir tmp-hisat2-${meta.sample}
-        hisat2 -x ${index_prefix} -1 ${reads[0]} -2 ${reads[1]} -p ${cpus} --new-summary --summary-file ${meta.sample}_summary.log --temp-directory tmp-hisat2-${meta.sample} ${additionalParams} -S ${meta.sample}.sam
-        samtools view -bS ${meta.sample}.sam | samtools sort -o ${meta.sample}.sorted.bam -T tmp --threads ${cpus}
-        rm -r tmp-hisat2-${meta.sample} ${meta.sample}.sam
-        """
-    }
 }
-
 
 
 process index_bam {
