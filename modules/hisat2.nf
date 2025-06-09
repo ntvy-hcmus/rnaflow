@@ -13,7 +13,7 @@
     """
     hisat2-build -p ${task.cpus} ${reference} ${reference.baseName}
     """
-}//
+//}
 
 process hisat2index {
     label 'hisat2'
@@ -117,7 +117,7 @@ process hisat2 {
             """
         }
     } 
-}//
+//}
 
 
 process index_bam {
