@@ -1,7 +1,7 @@
 /************************************************************************
 * HISAT2 INDEX
 ************************************************************************/
-// process hisat2index {
+/*process hisat2index {
     label 'hisat2'
     input:
     path(reference)
@@ -13,7 +13,7 @@
     """
     hisat2-build -p ${task.cpus} ${reference} ${reference.baseName}
     """
-// }
+}*/
 
 process hisat2index {
     label 'hisat2'
@@ -66,7 +66,7 @@ process hisat2 {
 /************************************************************************
 * HISAT2
 ************************************************************************/
-// process hisat2 {
+/*process hisat2 {
     label 'hisat2'
     tag "$meta.sample"
 
@@ -117,7 +117,7 @@ process hisat2 {
             """
         }
     } 
-// }
+}*/
 
 
 process index_bam {
