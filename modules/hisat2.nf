@@ -1,7 +1,7 @@
 /************************************************************************
 * HISAT2 INDEX
 ************************************************************************/
-process hisat2index {
+//process hisat2index {
     label 'hisat2'
     input:
     path(reference)
@@ -13,13 +13,60 @@ process hisat2index {
     """
     hisat2-build -p ${task.cpus} ${reference} ${reference.baseName}
     """
+}//
+
+process hisat2index {
+    label 'hisat2'
+    input:
+    path(reference)
+    output:
+    tuple val(reference.baseName), path("${reference.baseName}.*.ht2")
+    script:
+    """
+    hisat2-build -p ${task.cpus} ${reference} ${reference.baseName}
+    """
+}
+
+process hisat2 {
+    tag "$meta.sample"
+    label 'hisat2'
+    if ( params.softlink_results ) { publishDir "${params.output}/${params.hisat2_dir}", pattern: "*.sorted.bam" }
+    else { publishDir "${params.output}/${params.hisat2_dir}", mode: 'copy', pattern: "*.sorted.bam" }
+
+    input:
+    tuple val(meta), path(reads)
+    tuple val(index_prefix), path(index_files)
+    val(additionalParams)
+
+    output:
+    tuple val(meta), path("${meta.sample}.sorted.bam"), emit: sample_bam 
+    path "${meta.sample}_summary.log", emit: log
+
+    script:
+    def cpus = task.cpus
+    if ( !meta.paired_end ) {
+        """
+        mkdir tmp-hisat2-${meta.sample}
+        hisat2 -x ${index_prefix} -U ${reads[0]} -p ${cpus} --new-summary --summary-file ${meta.sample}_summary.log --temp-directory tmp-hisat2-${meta.sample} ${additionalParams} -S ${meta.sample}.sam
+        samtools view -bS ${meta.sample}.sam | samtools sort -o ${meta.sample}.sorted.bam -T tmp --threads ${cpus}
+        rm -r tmp-hisat2-${meta.sample} ${meta.sample}.sam
+        """
+    }
+    else {
+        """
+        mkdir tmp-hisat2-${meta.sample}
+        hisat2 -x ${index_prefix} -1 ${reads[0]} -2 ${reads[1]} -p ${cpus} --new-summary --summary-file ${meta.sample}_summary.log --temp-directory tmp-hisat2-${meta.sample} ${additionalParams} -S ${meta.sample}.sam
+        samtools view -bS ${meta.sample}.sam | samtools sort -o ${meta.sample}.sorted.bam -T tmp --threads ${cpus}
+        rm -r tmp-hisat2-${meta.sample} ${meta.sample}.sam
+        """
+    }
 }
 
 
 /************************************************************************
 * HISAT2
 ************************************************************************/
-process hisat2 {
+//process hisat2 {
     label 'hisat2'
     tag "$meta.sample"
 
@@ -70,7 +117,7 @@ process hisat2 {
             """
         }
     } 
-}
+}//
 
 
 process index_bam {
